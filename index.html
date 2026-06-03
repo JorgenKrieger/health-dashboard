@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+<title>Health Dashboard</title>
+<link rel="preconnect" href="https://fonts.bunny.net">
+<link href="https://fonts.bunny.net/css?family=geist:300,400,500,600,700|instrument-serif:400,400i&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/dashboard.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+</head>
+<body>
+<div id="app">
+
+  <!-- Onboarding -->
+  <div id="onboarding" style="display:none">
+    <div class="onboarding-card">
+      <div class="icon">🎯</div>
+      <h2>Set your goal</h2>
+      <p>Before we start, tell us what you're aiming for. You can update these at any time in settings.</p>
+      <form id="ob-form" novalidate>
+        <div class="field-group">
+          <label for="ob-weight">Goal weight (kg)</label>
+          <input type="number" id="ob-weight" step="0.1" min="30" max="300" placeholder="e.g. 70" required>
+          <span class="field-error"></span>
+        </div>
+        <div class="field-group">
+          <label for="ob-date">Target date</label>
+          <input type="date" id="ob-date" required>
+          <span class="field-error"></span>
+        </div>
+        <button type="submit" class="btn-load">Save &amp; continue</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Drop zone -->
+  <div id="dropzone" role="button" tabindex="0" aria-label="Load CSV file">
+    <div class="icon">📊</div>
+    <h2>Health Dashboard</h2>
+    <p>Drop your Apple Health CSV export here, or click to browse.</p>
+    <p style="margin-top:6px;font-size:.8rem;color:var(--color-text-muted)">Exported via HealthAutoExport · processed entirely in your browser</p>
+    <button class="btn-load" id="browse-btn">Choose CSV file</button>
+    <input type="file" id="file-input" accept=".csv">
+  </div>
+
+  <!-- Waist warning banner -->
+  <div id="waist-banner" role="alert">
+    <span class="warn-icon">⚠️</span>
+    <span id="waist-banner-text"></span>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="dashboard" style="display:none">
+
+    <!-- Header -->
+    <div id="header">
+      <div>
+        <h1>Health Dashboard</h1>
+        <div class="subtitle" id="data-range-label">—</div>
+      </div>
+      <div id="controls">
+        <div id="filter-bar">
+          <button class="filter-btn" data-days="30">30 days</button>
+          <button class="filter-btn" data-days="90">90 days</button>
+          <button class="filter-btn active" data-days="0">All time</button>
+          <button class="filter-btn" id="reload-btn">↺ Load new file</button>
+        </div>
+        <button id="settings-btn" aria-label="Settings">⚙ Settings</button>
+        <button id="theme-toggle" aria-label="Toggle light/dark mode">☀ Light</button>
+      </div>
+    </div>
+
+    <!-- 1. Weight Loss Goal -->
+    <section class="section" id="goal-section">
+      <div class="section-header collapsible-header" id="toggle-goal" role="button" tabindex="0" aria-expanded="false">
+        <h2>Weight Loss Goal</h2>
+        <span id="on-track-badge"></span>
+        <span class="collapse-toggle" id="chevron-goal">▲</span>
+      </div>
+      <div class="insights" id="insight-goal"></div>
+      <div class="goal-top cards cards-4" id="goal-cards"></div>
+      <div class="progress-wrap" id="goal-progress-wrap" style="margin-bottom:0">
+        <div class="progress-bar-bg"><div class="progress-bar-fill" id="goal-progress-fill" style="width:0%"></div></div>
+        <div class="progress-labels"><span id="prog-start"></span><span id="prog-goal">78.6 kg goal</span></div>
+      </div>
+      <div class="collapsible-body" id="charts-goal">
+        <div class="chart-wrap">
+          <h3>Weight over time</h3>
+          <div style="position:relative;height:300px">
+            <canvas id="chart-weight"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Body Composition -->
+    <section class="section section-body">
+      <div class="section-header collapsible-header" id="toggle-body" role="button" tabindex="0" aria-expanded="false">
+        <h2>Body Composition</h2>
+        <span class="collapse-toggle" id="chevron-body">▲</span>
+      </div>
+      <div class="insights" id="insight-body"></div>
+      <div class="collapsible-body" id="charts-body">
+        <div class="chart-grid-2" style="margin-bottom:16px">
+          <div class="chart-wrap">
+            <h3>Weight · Lean Mass · Fat Mass</h3>
+            <canvas id="chart-body-comp" class="chart-canvas" height="260"></canvas>
+          </div>
+          <div class="chart-wrap">
+            <h3>BMI Trend</h3>
+            <canvas id="chart-bmi" class="chart-canvas" height="260"></canvas>
+          </div>
+        </div>
+        <div class="cards cards-2" id="waist-cards"></div>
+      </div>
+    </section>
+
+    <!-- 3. Cardiovascular -->
+    <section class="section section-cardio">
+      <div class="section-header collapsible-header" id="toggle-cardio" role="button" tabindex="0" aria-expanded="false">
+        <h2>Cardiovascular Health</h2>
+        <span class="collapse-toggle" id="chevron-cardio">▲</span>
+      </div>
+      <div class="insights" id="insight-cardio"></div>
+      <div class="collapsible-body" id="charts-cardio">
+        <div class="chart-grid-3" style="margin-bottom:16px">
+          <div class="chart-wrap">
+            <h3>Resting Heart Rate</h3>
+            <canvas id="chart-hr-resting" class="chart-canvas" height="220"></canvas>
+          </div>
+          <div class="chart-wrap">
+            <h3>Heart Rate Range (min / avg / max)</h3>
+            <canvas id="chart-hr-range" class="chart-canvas" height="220"></canvas>
+          </div>
+          <div class="chart-wrap">
+            <h3>Blood Pressure</h3>
+            <canvas id="chart-bp" class="chart-canvas" height="220"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Activity -->
+    <section class="section section-activity">
+      <div class="section-header collapsible-header" id="toggle-activity" role="button" tabindex="0" aria-expanded="false">
+        <h2>Activity</h2>
+        <span class="collapse-toggle" id="chevron-activity">▲</span>
+      </div>
+      <div class="insights" id="insight-activity"></div>
+      <div class="collapsible-body" id="charts-activity">
+        <div class="chart-grid-2" style="margin-bottom:16px">
+          <div class="chart-wrap">
+            <h3>Step Count (daily + 7d avg)</h3>
+            <canvas id="chart-steps" class="chart-canvas" height="220"></canvas>
+          </div>
+          <div class="chart-wrap">
+            <h3>Active Energy / kJ (daily + 7d avg)</h3>
+            <canvas id="chart-active-energy" class="chart-canvas" height="220"></canvas>
+          </div>
+        </div>
+        <div class="chart-grid-2">
+          <div class="chart-wrap">
+            <h3>Walking + Running Distance / km</h3>
+            <canvas id="chart-distance" class="chart-canvas" height="200"></canvas>
+          </div>
+          <div class="chart-wrap">
+            <h3>Flights Climbed</h3>
+            <canvas id="chart-flights" class="chart-canvas" height="200"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. Nutrition -->
+    <section class="section section-nutrition">
+      <div class="section-header collapsible-header" id="toggle-nutrition" role="button" tabindex="0" aria-expanded="false">
+        <h2>Nutrition</h2>
+        <span class="collapse-toggle" id="chevron-nutrition">▲</span>
+      </div>
+      <div class="insights" id="insight-nutrition"></div>
+      <div class="macro-cards" id="macro-summary"></div>
+      <div class="collapsible-body" id="charts-nutrition">
+        <div class="chart-grid-2">
+          <div class="chart-wrap">
+            <h3>Dietary Energy / kJ (daily + 7d avg)</h3>
+            <canvas id="chart-diet-energy" class="chart-canvas" height="220"></canvas>
+          </div>
+          <div class="chart-wrap">
+            <h3>Macros (Carbs · Protein · Fat)</h3>
+            <canvas id="chart-macros" class="chart-canvas" height="220"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. Walking Quality -->
+    <section class="section section-activity">
+      <div class="section-header collapsible-header" id="toggle-walking" role="button" tabindex="0" aria-expanded="false">
+        <h2>Walking Quality</h2>
+        <span class="collapse-toggle" id="chevron-walking">▲</span>
+      </div>
+      <div class="insights" id="insight-walking"></div>
+      <div class="collapsible-body" id="charts-walking">
+        <div class="chart-grid-2" style="margin-bottom:16px">
+          <div class="chart-wrap">
+            <h3>Walking Speed / km/h</h3>
+            <canvas id="chart-wspeed" class="chart-canvas" height="200"></canvas>
+          </div>
+          <div class="chart-wrap">
+            <h3>Step Length / cm</h3>
+            <canvas id="chart-wstep" class="chart-canvas" height="200"></canvas>
+          </div>
+        </div>
+        <div class="chart-grid-2">
+          <div class="chart-wrap">
+            <h3>Walking Asymmetry % <span style="color:var(--color-text-muted);font-weight:400">(lower is better · flag &gt;5%)</span></h3>
+            <canvas id="chart-wasym" class="chart-canvas" height="200"></canvas>
+          </div>
+          <div class="chart-wrap">
+            <h3>Double Support % <span style="color:var(--color-text-muted);font-weight:400">(lower is better)</span></h3>
+            <canvas id="chart-wdouble" class="chart-canvas" height="200"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /dashboard -->
+</div><!-- /app -->
+
+<!-- Settings modal -->
+<div id="settings-modal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+  <div class="modal-card">
+    <h2 id="settings-title">Settings</h2>
+    <form id="st-form" novalidate>
+      <div class="field-group">
+        <label for="st-weight">Goal weight (kg)</label>
+        <input type="number" id="st-weight" step="0.1" min="30" max="300" placeholder="e.g. 70" required>
+        <span class="field-error"></span>
+      </div>
+      <div class="field-group">
+        <label for="st-date">Target date</label>
+        <input type="date" id="st-date" required>
+        <span class="field-error"></span>
+      </div>
+      <div class="modal-actions">
+        <button type="submit" class="btn-load">Save</button>
+        <button type="button" id="st-cancel" class="btn-secondary">Cancel</button>
+      </div>
+    </form>
+    <div class="modal-footer">
+      <button type="button" id="st-reset" class="btn-link">Reset all data</button>
+      <div id="st-reset-confirm" style="display:none">
+        <span>Are you sure? This will clear your settings.</span>
+        <button type="button" id="st-reset-yes" class="btn-danger">Confirm</button>
+        <button type="button" id="st-reset-no" class="btn-secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/dashboard.js"></script>
+</body>
+</html>

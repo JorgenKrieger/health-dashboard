@@ -1,0 +1,11 @@
+# macOS
+.DS_Store
+
+# Health data — never commit personal CSV exports
+*.csv
+
+# Brand assets (personal/proprietary)
+brand/
+
+# Claude Code session data
+.claude/

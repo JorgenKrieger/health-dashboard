@@ -1,0 +1,612 @@
+/* ── Brand tokens — Light (default) ── */
+:root {
+  --color-bg:              #F5F1EA;
+  --color-surface:         #FFFFFF;
+  --color-surface-2:       #FBF8F2;
+  --color-border:          #E5DED2;
+  --color-border-strong:   #D6CDBD;
+  --color-text-primary:    #211D17;
+  --color-text-secondary:  #56503F;
+  --color-text-muted:      #8B8478;
+
+  --color-accent-blood:    #BC392E;   /* cardio: HR, BP            */
+  --color-accent-body:     #3D6E93;   /* weight, BMI, composition  */
+  --color-accent-activity: #C5802A;   /* steps, energy, distance   */
+  --color-accent-nutrition:#4F8A56;   /* diet, macros              */
+
+  --shadow-card: 0 1px 3px rgba(33,29,23,.07), 0 2px 10px rgba(33,29,23,.05);
+  --shadow-card-hover: 0 4px 16px rgba(33,29,23,.1);
+  --glow-card: none;
+}
+
+/* ── Dark mode ── */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --color-bg:              #15140F;
+  --color-surface:         #1E1C16;
+  --color-surface-2:       #26241B;
+  --color-border:          #322F25;
+  --color-border-strong:   #423E31;
+  --color-text-primary:    #EDE7DB;
+  --color-text-secondary:  #B7AF9E;
+  --color-text-muted:      #8C8576;
+
+  --color-accent-blood:    #DB6155;
+  --color-accent-body:     #74A3C7;
+  --color-accent-activity: #DBA255;
+  --color-accent-nutrition:#72B279;
+
+  --shadow-card: none;
+  --glow-card: inset 0 0 0 1px rgba(237,231,219,.06);
+}
+
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── Base ── */
+body {
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  font-family: 'Geist', 'Inter', system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  min-height: 100dvh;
+  transition: background 250ms ease, color 250ms ease;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--color-accent-activity) 25%, transparent);
+}
+
+h1, h2 {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-weight: 400;
+}
+h3, h4, label { font-family: 'Geist', system-ui, sans-serif; }
+
+/* ── Layout ── */
+#app { max-width: 1440px; margin: 0 auto; padding: 0 40px 64px; }
+
+/* ── Drop zone ── */
+#dropzone {
+  border: 2px dashed var(--color-border-strong);
+  border-radius: 20px;
+  padding: 56px 24px;
+  text-align: center;
+  margin: 32px 0;
+  cursor: pointer;
+  transition: border-color 200ms, background 200ms;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+#dropzone.drag-over {
+  border-color: var(--color-accent-body);
+  background: color-mix(in srgb, var(--color-accent-body) 6%, var(--color-surface));
+}
+#dropzone h2 { font-size: 1.5rem; margin-bottom: 8px; color: var(--color-text-primary); }
+#dropzone p  { color: var(--color-text-secondary); font-size: .9rem; font-family: 'Geist', system-ui, sans-serif; }
+#dropzone .icon { font-size: 2.5rem; margin-bottom: 16px; }
+#file-input { display: none; }
+
+.btn-load {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 11px 28px;
+  border-radius: 10px;
+  background: var(--color-accent-body);
+  color: #fff;
+  font-family: 'Geist', system-ui, sans-serif;
+  font-size: .9rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: opacity 150ms;
+}
+.btn-load:hover { opacity: .85; }
+
+/* ── Top header ── */
+#header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 24px 0 16px;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 28px;
+}
+#header h1 {
+  font-size: 1.4rem;
+  color: var(--color-text-primary);
+  letter-spacing: -.01em;
+}
+#header .subtitle {
+  color: var(--color-text-muted);
+  font-size: .8rem;
+  font-family: 'Geist', system-ui, sans-serif;
+  margin-top: 2px;
+}
+
+/* ── Controls row ── */
+#controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* ── Filter buttons ── */
+#filter-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+.filter-btn {
+  padding: 6px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-family: 'Geist', system-ui, sans-serif;
+  font-size: .8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 150ms;
+  box-shadow: var(--shadow-card);
+}
+.filter-btn:hover  { border-color: var(--color-accent-body); color: var(--color-text-primary); }
+.filter-btn.active { background: var(--color-accent-body); border-color: var(--color-accent-body); color: #fff; }
+
+/* ── Theme toggle ── */
+#settings-btn,
+#theme-toggle {
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-family: 'Geist', system-ui, sans-serif;
+  font-size: .8rem;
+  cursor: pointer;
+  transition: all 150ms;
+  box-shadow: var(--shadow-card);
+  white-space: nowrap;
+}
+#settings-btn:hover,
+#theme-toggle:hover { color: var(--color-text-primary); border-color: var(--color-border-strong); }
+
+/* ── Waist banner ── */
+#waist-banner {
+  display: none;
+  align-items: center;
+  gap: 14px;
+  background: color-mix(in srgb, var(--color-accent-blood) 12%, var(--color-surface));
+  border: 1px solid color-mix(in srgb, var(--color-accent-blood) 40%, transparent);
+  border-left: 4px solid var(--color-accent-blood);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 28px;
+  font-size: .9rem;
+  color: var(--color-text-secondary);
+  font-family: 'Geist', system-ui, sans-serif;
+}
+#waist-banner .warn-icon { font-size: 1.3rem; flex-shrink: 0; }
+#waist-banner strong { color: var(--color-text-primary); }
+
+/* ── Section ── */
+.section {
+  padding-bottom: 22px;
+  margin-bottom: 22px;
+  border-bottom: 1px solid transparent;
+  transition: border-color 200ms;
+}
+/* Show bottom border only when the section is fully collapsed */
+.section.is-collapsed {
+  border-bottom-color: var(--color-border);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.section-header h2 {
+  font-size: 2.875rem;
+  color: var(--color-text-primary);
+  letter-spacing: -.02em;
+  flex: 1;
+}
+/* Icon lives inside h2 — inherits size automatically */
+.section-icon { font-size: 1em; margin-left: .2em; }
+
+
+
+/* ── Cards grid ── */
+.cards   { display: grid; gap: 16px; }
+.cards-2 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.cards-3 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+.cards-4 { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: var(--shadow-card);
+  transition: background 250ms, border-color 250ms;
+}
+[data-theme="dark"] .card { box-shadow: var(--glow-card); }
+
+.card-label {
+  font-size: .72rem;
+  color: var(--color-text-muted);
+  font-family: 'Geist', system-ui, sans-serif;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  margin-bottom: 6px;
+}
+.card-value {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 2rem;
+  font-weight: 400;
+  line-height: 1.1;
+  color: var(--color-text-primary);
+}
+.card-sub    { font-size: .82rem; color: var(--color-text-secondary); margin-top: 5px; }
+.card-no-data { color: var(--color-text-muted); font-style: italic; font-size: .95rem; }
+
+/* ── Goal section ── */
+#goal-section .goal-top {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+  margin-bottom: 16px;
+}
+
+/* ── Progress bar ── */
+.progress-wrap { margin: 4px 0 8px; }
+.progress-bar-bg {
+  height: 8px;
+  background: var(--color-border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--color-accent-body), color-mix(in srgb, var(--color-accent-body) 70%, #fff));
+  transition: width .4s ease;
+}
+.progress-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: .73rem;
+  color: var(--color-text-muted);
+  margin-top: 5px;
+  font-family: 'Geist', system-ui, sans-serif;
+}
+
+/* ── Badges ── */
+.badge {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: 999px;
+  font-size: .72rem;
+  font-family: 'Geist', system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: .02em;
+}
+.badge-green {
+  background: color-mix(in srgb, var(--color-accent-nutrition) 15%, transparent);
+  color: var(--color-accent-nutrition);
+  border: 1px solid color-mix(in srgb, var(--color-accent-nutrition) 35%, transparent);
+}
+.badge-red {
+  background: color-mix(in srgb, var(--color-accent-blood) 15%, transparent);
+  color: var(--color-accent-blood);
+  border: 1px solid color-mix(in srgb, var(--color-accent-blood) 35%, transparent);
+}
+.badge-amber {
+  background: color-mix(in srgb, var(--color-accent-activity) 15%, transparent);
+  color: var(--color-accent-activity);
+  border: 1px solid color-mix(in srgb, var(--color-accent-activity) 35%, transparent);
+}
+
+/* ── Chart containers ── */
+.chart-wrap {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 20px;
+  position: relative;
+  box-shadow: var(--shadow-card);
+  transition: background 250ms, border-color 250ms;
+}
+[data-theme="dark"] .chart-wrap { box-shadow: var(--glow-card); }
+
+.chart-wrap h3 {
+  font-size: .78rem;
+  color: var(--color-text-muted);
+  font-family: 'Geist', system-ui, sans-serif;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: 16px;
+}
+.chart-canvas { width: 100% !important; }
+
+.chart-grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+.chart-grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+
+/* ── Macro summary cards ── */
+.macro-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+  margin-bottom: 16px;
+}
+.macro-card {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 16px;
+  text-align: center;
+  box-shadow: var(--shadow-card);
+  transition: background 250ms;
+}
+.macro-card .mc-label {
+  font-size: .68rem;
+  color: var(--color-text-muted);
+  font-family: 'Geist', system-ui, sans-serif;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+.macro-card .mc-val {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 1.6rem;
+  font-weight: 400;
+  margin: 4px 0 2px;
+  color: var(--color-text-primary);
+}
+.macro-card .mc-sub { font-size: .72rem; color: var(--color-text-secondary); }
+
+/* ── Collapsible ── */
+.collapsible-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+  margin-bottom: 0;
+}
+.collapsible-header h2 { flex: 1; }
+.collapse-toggle {
+  font-size: .8rem;
+  color: var(--color-text-muted);
+  font-family: 'Geist', system-ui, sans-serif;
+  transition: transform 200ms;
+}
+.collapse-toggle { transform: rotate(180deg); }
+.collapse-toggle.open { transform: rotate(0deg); }
+/* Open state (default) */
+.collapsible-body {
+  height: auto;
+  margin-top: 16px;
+  overflow: visible;
+  interpolate-size: allow-keywords;
+  transition: height 350ms ease, margin-top 350ms ease, overflow 350ms allow-discrete;
+}
+/* Collapsed state — driven by .is-collapsed on the parent section */
+.is-collapsed .collapsible-body {
+  height: 0;
+  margin-top: 0;
+  overflow: hidden;
+}
+/* Suppress transition for instant state changes (e.g. initial render) */
+.no-transition .collapsible-body { transition: none !important; }
+
+/* ── Reference lines legend ── */
+.ref-legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 10px; }
+.ref-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .73rem;
+  color: var(--color-text-secondary);
+  font-family: 'Geist', system-ui, sans-serif;
+}
+.ref-dot { width: 12px; height: 3px; border-radius: 2px; }
+
+/* ── No data ── */
+.no-data-msg {
+  text-align: center;
+  padding: 40px 16px;
+  color: var(--color-text-muted);
+  font-style: italic;
+  font-size: .9rem;
+}
+
+/* ── Insights ── */
+.insights { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; margin-bottom: 0; }
+.insight-block {
+  padding: 0;
+  font-size: 1.125rem;
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+  font-family: 'Geist', system-ui, sans-serif;
+}
+.insight-block strong { color: var(--color-text-primary); font-weight: 600; }
+.insight-block em     { color: var(--color-text-muted); font-style: normal; font-size: .9rem; }
+
+/* Positive and neutral stay in default text colour — only warnings are tinted */
+.insight-warning { color: var(--color-accent-activity); }
+.insight-warning strong { color: var(--color-accent-activity); }
+
+/* ── Onboarding ── */
+#onboarding {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.onboarding-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 48px;
+  max-width: 420px;
+  width: 100%;
+  text-align: center;
+  box-shadow: var(--glow-card);
+}
+
+.onboarding-card .icon { font-size: 2.5rem; margin-bottom: 12px; }
+.onboarding-card h2   { font-size: 1.8rem; margin-bottom: 8px; }
+.onboarding-card p    { color: var(--color-text-secondary); margin-bottom: 28px; }
+.onboarding-card form { text-align: left; }
+.onboarding-card .btn-load { width: 100%; margin-top: 8px; }
+
+/* ── Form fields ── */
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.field-group label {
+  font-size: .85rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.field-group input {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 1rem;
+  font-family: 'Geist', system-ui, sans-serif;
+  color: var(--color-text-primary);
+  transition: border-color 150ms;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.field-group input:focus {
+  outline: none;
+  border-color: var(--color-accent-body);
+}
+
+.field-error {
+  font-size: .82rem;
+  color: var(--color-accent-blood);
+  min-height: 1.2em;
+}
+
+/* ── Settings modal ── */
+#settings-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.modal-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 40px;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: var(--glow-card);
+}
+
+.modal-card h2 { font-size: 1.5rem; margin-bottom: 24px; }
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.modal-actions .btn-load,
+.modal-actions .btn-secondary { flex: 1; }
+
+.modal-footer {
+  margin-top: 28px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+#st-reset-confirm {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: .9rem;
+  color: var(--color-text-secondary);
+}
+
+/* ── Button variants ── */
+.btn-secondary {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 9px 18px;
+  font-size: .9rem;
+  font-family: 'Geist', system-ui, sans-serif;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: background 150ms, border-color 150ms;
+}
+
+.btn-secondary:hover { background: var(--color-bg); }
+
+.btn-danger {
+  background: color-mix(in srgb, var(--color-accent-blood) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-accent-blood) 35%, transparent);
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: .85rem;
+  font-family: 'Geist', system-ui, sans-serif;
+  color: var(--color-accent-blood);
+  cursor: pointer;
+  transition: background 150ms;
+}
+
+.btn-danger:hover { background: color-mix(in srgb, var(--color-accent-blood) 25%, transparent); }
+
+.btn-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: .85rem;
+  font-family: 'Geist', system-ui, sans-serif;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 150ms;
+}
+
+.btn-link:hover { color: var(--color-text-secondary); }
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  #app         { padding: 0 20px 64px; }
+  .card-value  { font-size: 1.6rem; }
+  #header h1   { font-size: 1.2rem; }
+  #controls    { gap: 8px; }
+}
