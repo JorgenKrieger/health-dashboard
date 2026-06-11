@@ -228,9 +228,10 @@ function renderGoal(){
   const regAll   = linearRegression(wAll.map(r => r.date), wAll.map(r => r.weight));
   const regRecent= wRecent.length >= 7 ? linearRegression(wRecent.map(r => r.date), wRecent.map(r => r.weight)) : null;
 
-  // Blended slope: average of all-time and recent (or just all-time if not enough recent data)
+  // Weighted blend of all-time and recent slopes: accounts for typical weight loss slowdown
+  // 60% all-time (stable, high confidence) + 40% recent (reflects current pace)
   const blendedSlope = regAll && regRecent
-    ? (regAll.slope + regRecent.slope) / 2
+    ? (regAll.slope * 0.6 + regRecent.slope * 0.4)
     : regAll ? regAll.slope : null;
   // Anchor the blended line at today's current weight
   const blendedReg = blendedSlope !== null
@@ -398,8 +399,13 @@ function renderBodyComp(){
 
     const banner     = document.getElementById('waist-banner');
     const bannerText = document.getElementById('waist-banner-text');
-    if(ago >= WAIST_DAYS){
-      bannerText.innerHTML = `<strong>Waist measurement overdue</strong> — last recorded ${lastWaist.dateStr} (${ago} days ago). Measure your waist to keep your data current.`;
+    if(ago >= 60){
+      // Very old data — stronger reminder
+      bannerText.innerHTML = `Last waist measurement was <strong>${ago} days ago</strong>. Regular measurements help track changes beyond what weight alone shows. Consider measuring next time you weigh in.`;
+      banner.style.display = 'flex';
+    } else if(ago >= 30){
+      // Moderately old — gentle reminder
+      bannerText.innerHTML = `Last waist measurement was <strong>${ago} days ago</strong>. Consider measuring again next time you weigh in to track body composition changes.`;
       banner.style.display = 'flex';
     } else {
       banner.style.display = 'none';
@@ -737,12 +743,15 @@ function renderInsights(){
     const wSlope = slopePerDay(rows, 'weight',   14);
     const lSlope = slopePerDay(rows, 'leanMass', 14);
 
-    if(wSlope !== null && lSlope !== null && wSlope < -0.01){
+    // Only evaluate lean mass ratio if weight loss is substantial (> 0.7 kg/week, not daily noise)
+    if(wSlope !== null && lSlope !== null && wSlope < -0.1){
       const leanLossFraction = lSlope / wSlope;
       if(leanLossFraction > 0.4){
+        // Lean mass loss is significant relative to total weight loss
         out.push(warn(`There's a pattern worth watching: your <strong>lean mass has been declining</strong> alongside your weight. This can happen when losing weight quickly or when protein intake is on the lower side. It's not cause for alarm yet, but bumping up your protein could help protect that muscle.`));
-      } else if(lSlope >= -0.01){
-        out.push(pos(`Good sign — your <strong>lean mass looks stable</strong> while your weight is coming down. That's the ideal scenario: you're losing fat, not muscle.`));
+      } else {
+        // Weight is dropping meaningfully and lean mass loss is <40% of total — that's good
+        out.push(pos(`Good sign — your <strong>lean mass is being preserved</strong> while your weight comes down. That's the ideal scenario: you're losing fat, not muscle.`));
       }
     }
 
@@ -854,14 +863,21 @@ function renderInsights(){
     if(dataCount(rows, 'dietEnergy') < 7){ setInsight('insight-nutrition', out); return; }
 
     const dietAvg = nAvg(rows, 'dietEnergy', 7);
-    if(dietAvg !== null && dietAvg < 5000){
-      out.push(warn(`Your logged calorie intake has been <strong>quite low</strong> this week (avg ${Math.round(dietAvg).toLocaleString()} kJ). While eating less drives weight loss, going too low for too long can slow your metabolism and lead to muscle loss. Make sure you're eating enough to fuel your body.`));
+    const curWeight = rows.filter(r => r.weight !== null).slice(-1)[0]?.weight;
+    if(dietAvg !== null && curWeight !== null){
+      // Estimate personalized minimum: roughly 20 kcal/kg (≈1.4 kcal/kg × 4.2 kJ per kcal, adjusted for safety margin)
+      // This approximates 90% of estimated BMR for someone of unknown age/sex/activity
+      const estimatedMinKJ = curWeight * 20 * 0.9 * 4.2;  // ≈ curWeight * 75.6 kJ as rough minimum
+      if(dietAvg < estimatedMinKJ){
+        out.push(warn(`Your logged calorie intake has been <strong>quite low</strong> (avg ${Math.round(dietAvg).toLocaleString()} kJ) — below an estimated safe minimum for your body weight. While eating less drives weight loss, going too low for too long can slow your metabolism and lead to muscle loss. Make sure you're eating enough to fuel your body.`));
+      }
     }
 
     if(dataCount(rows, 'protein') >= 7){
       const protAvg   = nAvg(rows, 'protein', 7);
       const curWeight = rows.filter(r => r.weight !== null).slice(-1)[0]?.weight;
       if(protAvg !== null && curWeight !== null){
+        // Protein targets for sedentary weight loss: 1.0-1.2 g/kg adequate, 1.2-1.6 g/kg optimal for muscle preservation
         const ratio  = protAvg / curWeight;
         const target = Math.round(curWeight * 1.6 / 5) * 5;
         if(ratio < 1.2){
